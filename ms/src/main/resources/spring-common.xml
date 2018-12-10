@@ -33,14 +33,14 @@
 			<value>com.mysql.jdbc.Driver</value>
 		</property>
 		<property name="url">
-			<value>jdbc:mysql://47.105.82.40:3306/yiya?useUnicode=true&amp;charaterEncoding=utf-8
+			<value>jdbc:mysql://127.0.0.1:3306/yiya?useUnicode=true&amp;charaterEncoding=utf-8
 			</value>
 		</property>
 		<property name="username">
 			<value>root</value>
 		</property>
 		<property name="password">
-			<value>admin</value>
+			<value>1234</value>
 		</property>
 	</bean>
 
