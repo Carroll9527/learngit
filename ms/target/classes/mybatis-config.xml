@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+	<typeAliases>
+
+	</typeAliases>
+
+	<!-- <plugins> <plugin interceptor="com.github.pagehelper.PageInterceptor"></plugin> 
+		</plugins> -->
+	<mappers>
+
+		<mapper resource="com/yiya/mybatis/SiteMainMapper.xml" />
+
+
+		<mapper resource="com/yiya/mybatis/SiteTypeMapper.xml" />
+
+
+		<mapper resource="com/yiya/mybatis/SiteColumnMapper.xml" />
+
+
+		<mapper resource="com/yiya/mybatis/SiteScoreMapper.xml" />
+
+
+		<mapper resource="com/yiya/mybatis/SysMenuMapper.xml" />
+
+
+		<mapper resource="com/yiya/mybatis/SysUserMapper.xml" />
+
+
+		<mapper resource="com/yiya/mybatis/SysRoleMapper.xml" />
+
+
+		<mapper resource="com/yiya/mybatis/SysRoleRelMapper.xml" />
+		<mapper resource="com/yiya/mybatis/SysMenuBtnMapper.xml" />
+		<mapper resource="com/yiya/mybatis/SysMenuBtnMapper.xml" />
+
+		<mapper resource="com/yiya/mybatis/WeeklyMapper.xml" />
+		<mapper resource="com/yiya/mybatis/FollowInformationMapper.xml" />
+	</mappers>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</configuration>

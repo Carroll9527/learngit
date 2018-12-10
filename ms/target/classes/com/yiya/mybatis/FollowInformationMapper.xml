@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yiya.mapper.FollowInformationMapper">
+	<resultMap id="BaseResultMap"
+		type="com.yiya.bean.FollowInformation">
+		<id column="id" jdbcType="INTEGER" property="id" />
+		<result column="submission_times" jdbcType="TIMESTAMP"
+			property="submission_times" />
+		<result column="visit_times" jdbcType="VARCHAR"
+			property="visit_times" />
+		<result column="visit_contents" jdbcType="VARCHAR"
+			property="visit_contents" />
+		<result column="next_week_plans" jdbcType="VARCHAR"
+			property="next_week_plans" />
+		<result column="classifications" jdbcType="VARCHAR"
+			property="classifications" />
+		<result column="expected_release_dates" jdbcType="VARCHAR"
+			property="expected_release_dates" />
+		<result column="budgets" jdbcType="VARCHAR" property="budgets" />
+		<result column="specific_positions" jdbcType="VARCHAR"
+			property="specific_positions" />
+		<result column="mediatypes" jdbcType="VARCHAR"
+			property="mediatypes" />
+		<result column="wkid" jdbcType="INTEGER" property="wkid" />
+		<!-- 多对一的关系 -->
+		<!-- property: 指的是属性名称, javaType：指的是属性的类型 -->
+		<association property="weekly"
+			javaType="com.yiya.bean.Weekly">
+			<id column="id" property="id" />
+			<result column="full_customer_name" jdbcType="VARCHAR"
+				property="fullCustomerName" />
+			<result column="main_brand" jdbcType="VARCHAR"
+				property="mainBrand" />
+			<result column="subbrand" jdbcType="VARCHAR"
+				property="subbrand" />
+			<result column="customer_name" jdbcType="VARCHAR"
+				property="customerName" />
+			<result column="post" jdbcType="VARCHAR" property="post" />
+			<result column="industry" jdbcType="VARCHAR"
+				property="industry" />
+			<result column="speaker" jdbcType="VARCHAR" property="speaker" />
+		</association>
+	</resultMap>
+	<sql id="Example_Where_Clause">
+		<where>
+			<foreach collection="oredCriteria" item="criteria"
+				separator="or">
+				<if test="criteria.valid">
+					<trim prefix="(" prefixOverrides="and" suffix=")">
+						<foreach collection="criteria.criteria" item="criterion">
+							<choose>
+								<when test="criterion.noValue">
+									and ${criterion.condition}
+								</when>
+								<when test="criterion.singleValue">
+									and ${criterion.condition} #{criterion.value}
+								</when>
+								<when test="criterion.betweenValue">
+									and ${criterion.condition} #{criterion.value}
+									and
+									#{criterion.secondValue}
+								</when>
+								<when test="criterion.listValue">
+									and ${criterion.condition}
+									<foreach close=")" collection="criterion.value"
+										item="listItem" open="(" separator=",">
+										#{listItem}
+									</foreach>
+								</when>
+							</choose>
+						</foreach>
+					</trim>
+				</if>
+			</foreach>
+		</where>
+	</sql>
+
+
+	<sql id="Base_Column_List">
+		id, submission_times, visit_times, visit_contents,
+		next_week_plans,
+		classifications,
+		expected_release_dates, budgets,
+		specific_positions, mediatypes, wkid
+	</sql>
+	<select id="selectByExample"
+		parameterType="com.yiya.bean.FollowInformationExample"
+		resultMap="BaseResultMap">
+		select
+		<if test="distinct">
+			distinct
+		</if>
+		'false' as QUERYID,
+		<include refid="Base_Column_List" />
+		from follow_information
+		<if test="_parameter != null">
+			<include refid="Example_Where_Clause" />
+		</if>
+		<if test="orderByClause != null">
+			order by ${orderByClause}
+		</if>
+	</select>
+
+	<!-- 根据id查详细信息, 关联将weekly查询出来,传入参数客户全称 -->
+	<select id="listFollow" resultMap="BaseResultMap">
+		SELECT f.*
+		FROM weekly w RIGHT
+		JOIN follow_information f on
+		w.id=f.wkid WHERE
+		f.wkid=#{0} ORDER BY submission_times DESC ;
+	</select>
+	
+	<!-- 查询关联周报和详细的关联信息 -->
+	<select id="uqueryslef" parameterType="Object"
+		resultMap="BaseResultMap">
+		SELECT
+		full_customer_name,main_brand,subbrand,customer_name,post,industry,speaker,
+		submission_times,visit_times,visit_contents,classifications,mediatypes,specific_positions,budgets,expected_release_dates,next_week_plans
+		FROM follow_information f left JOIN weekly w
+		on w.id= f.wkid INNER JOIN
+		(SELECT id FROM sys_user WHERE
+		FIND_IN_SET(id,queryChildUserInfo(#{0})))
+		v on w.groupid=v.id and
+		CONCAT(full_customer_name,speaker) like
+		CONCAT('%', #{1}, '%')  ORDER BY submission_times DESC
+	</select>
+	
+
+	<select id="selectByPrimaryKey"
+		parameterType="java.lang.Integer" resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from follow_information
+		where id = #{id,jdbcType=INTEGER}
+	</select>
+	<delete id="deleteByPrimaryKey" parameterType="Object">
+		delete from
+		follow_information
+		where id = #{id}
+	</delete>
+	<!-- 删除记录 -->
+	<delete id="delete" parameterType="Object">
+		delete from follow_information
+		where id =
+		#{id}
+	</delete>
+	<insert id="insert" keyColumn="id" keyProperty="id"
+		parameterType="com.yiya.bean.FollowInformation"
+		useGeneratedKeys="true">
+		insert into follow_information (submission_times,
+		visit_times,
+		visit_contents, next_week_plans, classifications,
+		expected_release_dates, budgets, specific_positions,
+		mediatypes, wkid)
+		values (#{submission_times,jdbcType=TIMESTAMP},
+		#{visit_times,jdbcType=VARCHAR},
+		#{visit_contents,jdbcType=VARCHAR},
+		#{next_week_plans,jdbcType=VARCHAR},
+		#{classifications,jdbcType=VARCHAR},
+		#{expected_release_dates,jdbcType=VARCHAR},
+		#{budgets,jdbcType=VARCHAR}, #{specific_positions,jdbcType=VARCHAR},
+		#{mediatypes,jdbcType=VARCHAR}, #{wkid,jdbcType=INTEGER})
+	</insert>
+	<insert id="insertSelective" keyColumn="id" keyProperty="id"
+		parameterType="com.yiya.bean.FollowInformation"
+		useGeneratedKeys="true">
+		insert into follow_information
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="submission_times != null">
+				submission_times,
+			</if>
+			<if test="visit_times != null">
+				visit_times,
+			</if>
+			<if test="visit_contents != null">
+				visit_contents,
+			</if>
+			<if test="next_week_plans != null">
+				next_week_plans,
+			</if>
+			<if test="classifications != null">
+				classifications,
+			</if>
+			<if test="expected_release_dates != null">
+				expected_release_dates,
+			</if>
+			<if test="budgets != null">
+				budgets,
+			</if>
+			<if test="specific_positions != null">
+				specific_positions,
+			</if>
+			<if test="mediatypes != null">
+				mediatypes,
+			</if>
+			<if test="wkid != null">
+				wkid,
+			</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="submission_times != null">
+				#{submission_times,jdbcType=TIMESTAMP},
+			</if>
+			<if test="visit_times != null">
+				#{visit_times,jdbcType=VARCHAR},
+			</if>
+			<if test="visit_contents != null">
+				#{visit_contents,jdbcType=VARCHAR},
+			</if>
+			<if test="next_week_plans != null">
+				#{next_week_plans,jdbcType=VARCHAR},
+			</if>
+			<if test="classifications != null">
+				#{classifications,jdbcType=VARCHAR},
+			</if>
+			<if test="expected_release_dates != null">
+				#{expected_release_dates,jdbcType=VARCHAR},
+			</if>
+			<if test="budgets != null">
+				#{budgets,jdbcType=VARCHAR},
+			</if>
+			<if test="specific_positions != null">
+				#{specific_positions,jdbcType=VARCHAR},
+			</if>
+			<if test="mediatypes != null">
+				#{mediatypes,jdbcType=VARCHAR},
+			</if>
+			<if test="wkid != null">
+				#{wkid,jdbcType=INTEGER},
+			</if>
+		</trim>
+	</insert>
+	<update id="updateByPrimaryKeySelective"
+		parameterType="com.yiya.bean.FollowInformation">
+		update follow_information
+		<set>
+			<if test="submission_times != null">
+				submission_times =
+				#{submission_times,jdbcType=TIMESTAMP},
+			</if>
+			<if test="visit_times != null">
+				visit_times = #{visit_times,jdbcType=VARCHAR},
+			</if>
+			<if test="visit_contents != null">
+				visit_contents = #{visit_contents,jdbcType=VARCHAR},
+			</if>
+			<if test="next_week_plans != null">
+				next_week_plans = #{next_week_plans,jdbcType=VARCHAR},
+			</if>
+			<if test="classifications != null">
+				classifications = #{classifications,jdbcType=VARCHAR},
+			</if>
+			<if test="expected_release_dates != null">
+				expected_release_dates =
+				#{expected_release_dates,jdbcType=VARCHAR},
+			</if>
+			<if test="budgets != null">
+				budgets = #{budgets,jdbcType=VARCHAR},
+			</if>
+			<if test="specific_positions != null">
+				specific_positions =
+				#{specific_positions,jdbcType=VARCHAR},
+			</if>
+			<if test="mediatypes != null">
+				mediatypes = #{mediatypes,jdbcType=VARCHAR},
+			</if>
+			<if test="wkid != null">
+				wkid = #{wkid,jdbcType=INTEGER},
+			</if>
+		</set>
+		where id = #{id,jdbcType=INTEGER}
+	</update>
+	<update id="updateByPrimaryKey"
+		parameterType="com.yiya.bean.FollowInformation">
+		update follow_information
+		set submission_times =
+		#{submission_times,jdbcType=TIMESTAMP},
+		visit_times =
+		#{visit_times,jdbcType=VARCHAR},
+		visit_contents =
+		#{visit_contents,jdbcType=VARCHAR},
+		next_week_plans =
+		#{next_week_plans,jdbcType=VARCHAR},
+		classifications =
+		#{classifications,jdbcType=VARCHAR},
+		expected_release_dates =
+		#{expected_release_dates,jdbcType=VARCHAR},
+		budgets =
+		#{budgets,jdbcType=VARCHAR},
+		specific_positions =
+		#{specific_positions,jdbcType=VARCHAR},
+		mediatypes =
+		#{mediatypes,jdbcType=VARCHAR},
+		wkid = #{wkid,jdbcType=INTEGER}
+		where id
+		= #{id,jdbcType=INTEGER}
+	</update>
+</mapper>

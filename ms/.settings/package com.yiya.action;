@@ -1,0 +1,105 @@
+package com.yiya.action;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.alibaba.fastjson.JSONObject;
+
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
+import com.yiya.bean.Weekly;
+import com.yiya.model.WeeklyModel;
+import com.yiya.service.SiteWeeklyService;
+import com.yiya.service.WeeklyService;
+import com.yiya.utils.HtmlUtil;
+import com.yiya.utils.Page;
+
+
+
+@Controller
+@RequestMapping("/siteWeek")
+public class SiteWeeklyAction extends BaseAction {
+	@Autowired
+	WeeklyService weeklyService;
+	
+	private final static Logger log=Logger.getLogger(SiteWeeklyAction.class);
+	
+	@Autowired(required=false)
+	private SiteWeeklyService<Weekly> siteWeekly;
+	
+	@RequestMapping("/list")
+	public ModelAndView list(WeeklyModel model,HttpServletRequest request) throws Exception{
+		Map<String,Object>  context = getRootMap();
+		return forword("siteMain/siteWeekly", context);
+	}
+	
+	@RequestMapping("/typeListJson")
+	public void typeListJson(HttpServletResponse response) throws Exception{
+		List<Weekly> dataList = siteWeekly.queryByAll();
+		HtmlUtil.writerJson(response, dataList);
+	}
+	 
+	@RequestMapping("/save")
+	public void save(Weekly bean,HttpServletResponse response) throws Exception{
+		Map<String,Object> context = new HashMap<String,Object>();
+		if(bean.getWeeklyId()==null){
+			siteWeekly.add(bean);
+		}else{
+			siteWeekly.update(bean);
+		}
+		sendSuccessMessage(response,"淇濆瓨鎴愬姛~");
+	}
+	
+/*	@RequestMapping("/dataList")
+	public void dataList(SiteTypeModel model,HttpServletResponse response) throws Exception{
+		List<Weekly> dataList=siteWeekly.queryByList(model);
+		//璁剧疆椤甸潰鏁版嵁
+		Map<String,Object> jsonMap = new HashMap<String,Object>();
+		jsonMap.put("total", model.getPager().getRowCount());
+		jsonMap.put("rows", dataList);
+		HtmlUtil.writerJson(response,jsonMap);				
+	}*/
+	
+	@ResponseBody
+	@RequestMapping(value="/dataList",produces="text/html;charset=UTF-8")
+	public String getManyWeekly(Page page){		
+		PageHelper.offsetPage((page.getPage()-1)*page.getPage(),page.getPage());
+		List<Weekly> we =weeklyService.list();
+		int total =(int) new PageInfo<Weekly>(we).getTotal();
+		JSONObject result = new JSONObject();
+		result.put("rows", we);
+		result.put("total", total);
+		return result.toJSONString();
+	}
+	
+	
+	@RequestMapping("/getId")
+	public void getId(Integer id,HttpServletResponse response) throws Exception{
+		Map<String,Object> context = new HashMap();
+		Weekly bean = siteWeekly.queryById(id);
+		if(bean == null){
+			sendFailureMessage(response, "娌℃湁鎵惧埌瀵瑰簲鐨勮褰�!");
+			return;
+		}
+		context.put(SUCCESS, true);
+		context.put("data", bean);
+		HtmlUtil.writerJson(response,context);
+	}
+	
+	@RequestMapping("/delete")
+	public void delete(Integer[] id,HttpServletResponse response) throws Exception{
+		siteWeekly.delete(id);
+		sendSuccessMessage(response, "鍒犻櫎鎴愬姛");
+	}	
+}

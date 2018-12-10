@@ -1,0 +1,434 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yiya.mapper.WeeklyMapper">
+	<resultMap id="BaseResultMap" type="com.yiya.bean.Weekly">
+		<id column="id" jdbcType="INTEGER" property="id" />
+		<result column="full_customer_name" jdbcType="VARCHAR"
+			property="fullCustomerName" />
+		<result column="main_brand" jdbcType="VARCHAR"
+			property="mainBrand" />
+		<result column="subbrand" jdbcType="VARCHAR"
+			property="subbrand" />
+		<result column="customer_name" jdbcType="VARCHAR"
+			property="customerName" />
+		<result column="post" jdbcType="VARCHAR" property="post" />
+		<result column="visit_time" jdbcType="VARCHAR"
+			property="visitTime" />
+		<result column="visit_content" jdbcType="VARCHAR"
+			property="visitContent" />
+		<result column="classification" jdbcType="VARCHAR"
+			property="classification" />
+		<result column="mediatype" jdbcType="VARCHAR"
+			property="mediatype" />
+		<result column="specific_position" jdbcType="VARCHAR"
+			property="specificPosition" />
+		<result column="budget" jdbcType="VARCHAR" property="budget" />
+		<result column="expected_release_date" jdbcType="VARCHAR"
+			property="expectedReleaseDate" />
+		<result column="remarks" jdbcType="VARCHAR" property="remarks" />
+		<result column="next_week_plan" jdbcType="VARCHAR"
+			property="nextWeekPlan" />
+		<result column="groupid" jdbcType="VARCHAR" property="groupid" />
+		<result column="speaker" jdbcType="VARCHAR" property="speaker" />
+		<result column="submission_time" jdbcType="TIMESTAMP"
+			property="submissionTime" />
+		<result column="industry" jdbcType="VARCHAR"
+			property="industry" />
+		<!-- 一对多的关系 -->
+		<!-- property: 指的是集合属性的值, ofType：指的是集合中元素的类型 -->
+		<collection property="informations"
+			ofType="com.yiya.bean.FollowInformation">
+			<id column="fid" jdbcType="INTEGER" property="id" />
+			<result column="submission_times" jdbcType="TIMESTAMP"
+				property="submission_times" />
+			<result column="visit_times" jdbcType="TIMESTAMP"
+				property="visit_times" />
+			<result column="visit_contents" jdbcType="VARCHAR"
+				property="visit_contents" />
+			<result column="next_week_plans" jdbcType="VARCHAR"
+				property="next_week_plans" />
+			<result column="classifications" jdbcType="VARCHAR"
+				property="classifications" />
+			<result column="expected_release_dates" jdbcType="VARCHAR"
+				property="expected_release_dates" />
+			<result column="budgets" jdbcType="VARCHAR" property="budgets" />
+			<result column="specific_positions" jdbcType="VARCHAR"
+				property="specific_positions" />
+			<result column="mediatypes" jdbcType="VARCHAR"
+				property="mediatypes" />
+		</collection>
+	
+	</resultMap>
+	<sql id="Example_Where_Clause">
+		<where>
+			<foreach collection="oredCriteria" item="criteria"
+				separator="or">
+				<if test="criteria.valid">
+					<trim prefix="(" prefixOverrides="and" suffix=")">
+						<foreach collection="criteria.criteria" item="criterion">
+							<choose>
+								<when test="criterion.noValue">
+									and ${criterion.condition}
+								</when>
+								<when test="criterion.singleValue">
+									and ${criterion.condition} #{criterion.value}
+								</when>
+								<when test="criterion.betweenValue">
+									and ${criterion.condition} #{criterion.value}
+									and
+									#{criterion.secondValue}
+								</when>
+								<when test="critterion"></when>
+								<when test="criterion.listValue">
+									and ${criterion.condition}
+									<foreach close=")" collection="criterion.value"
+										item="listItem" open="(" separator=",">
+										#{listItem}
+									</foreach>
+								</when>
+							</choose>
+						</foreach>
+					</trim>
+				</if>
+			</foreach>
+		</where>
+	</sql>
+	<sql id="Base_Column_List">
+		id, full_customer_name, main_brand, subbrand,
+		customer_name, post,
+		visit_time,
+		visit_content, classification,
+		mediatype, specific_position, budget,
+		expected_release_date,
+		remarks,
+		next_week_plan, groupid, speaker,submission_time,industry
+	</sql>
+
+
+
+
+	<select id="selectByExample"
+		parameterType="com.yiya.bean.WeeklyExample" resultMap="BaseResultMap">
+		select
+		<if test="distinct">
+			distinct
+		</if>
+		'false' as QUERYID,
+		<include refid="Base_Column_List" />
+		from weekly
+		<if test="_parameter != null">
+			<include refid="Example_Where_Clause" />
+		</if>
+		<if test="orderByClause != null">
+			order by ${orderByClause}
+		</if>
+	</select>
+	<select id="selectByPrimaryKey"
+		parameterType="java.lang.Integer" resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from weekly
+		where id = #{id,jdbcType=INTEGER}
+	</select>
+
+
+	<select id="queryById" resultMap="BaseResultMap"
+		parameterType="Object">
+		select
+		<include refid="Base_Column_List" />
+		from weekly where id = #{id}
+	</select>
+	<!-- 根据客户全称,报告人递归层次查询 -->
+	<select id="queryslef" parameterType="Object"
+		resultMap="BaseResultMap">
+		SELECT * FROM weekly INNER JOIN (SELECT id FROM sys_user
+		WHERE
+		FIND_IN_SET(id,queryChildUserInfo(#{0}))) v on
+		weekly.groupid=v.id
+		and
+		CONCAT(full_customer_name,speaker) like
+		CONCAT('%', #{1}, '%') 
+	</select>
+
+	<!-- 查询关联周报和详细的关联信息 -->
+	<select id="uqueryslef" parameterType="Object"
+		resultMap="BaseResultMap">
+		SELECT
+		full_customer_name,main_brand,subbrand,customer_name,post,industry,speaker,
+		submission_times,visit_times,visit_contents,classifications,mediatypes,specific_positions,budgets,expected_release_dates,next_week_plans
+		FROM follow_information f left JOIN weekly w
+		on w.id= f.wkid INNER JOIN
+		(SELECT id FROM sys_user WHERE
+		FIND_IN_SET(id,queryChildUserInfo(#{0})))
+		v on w.groupid=v.id and
+		CONCAT(full_customer_name,speaker) like
+		CONCAT('%', #{1}, '%') ORDER BY submission_times DESC
+	</select>
+
+
+	<!-- 关联查询周报和详细跟进信息 -->
+	<select id="listFormation" resultMap="BaseResultMap">
+		SELECT w.*,f.*,w.id 'id',
+		f.id 'fid' FROM weekly w LEFT JOIN follow_information f on
+		w.id=f.wkid;
+	</select>
+
+
+	<delete id="deleteByPrimaryKey"
+		parameterType="java.lang.Integer">
+		delete from weekly
+		where id = #{id,jdbcType=INTEGER}
+	</delete>
+	<insert id="insert" parameterType="com.yiya.bean.Weekly">
+		insert into weekly (id,
+		full_customer_name, main_brand,
+		subbrand, customer_name, post,
+		visit_time, visit_content, classification,
+		mediatype,
+		specific_position, budget,
+		expected_release_date, remarks,
+		next_week_plan,
+		groupid,speaker,submission_time, industry)
+		values
+		(#{id,jdbcType=INTEGER}, #{full_customer_name,jdbcType=VARCHAR},
+		#{main_brand,jdbcType=VARCHAR},
+		#{subbrand,jdbcType=VARCHAR},
+		#{customer_name,jdbcType=VARCHAR}, #{post,jdbcType=VARCHAR},
+		#{visit_time,jdbcType=VARCHAR}, #{visit_content,jdbcType=VARCHAR},
+		#{classification,jdbcType=VARCHAR},
+		#{mediatype,jdbcType=VARCHAR},
+		#{specific_position,jdbcType=VARCHAR}, #{budget,jdbcType=VARCHAR},
+		#{expected_release_date,jdbcType=VARCHAR},
+		#{remarks,jdbcType=VARCHAR}, #{next_week_plan,jdbcType=VARCHAR},
+		#{groupid,jdbcType=VARCHAR},#{speaker,jdbcType=VARCHAR},#{submissionTime,jdbcType=TIMESTAMP}
+		, #{industry,jdbcType=VARCHAR})
+
+	</insert>
+	<insert id="insertSelective"
+		parameterType="com.yiya.bean.Weekly">
+		insert into weekly
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="id != null">
+				id,
+			</if>
+			<if test="fullCustomerName != null">
+				full_customer_name,
+			</if>
+			<if test="mainBrand != null">
+				main_brand,
+			</if>
+			<if test="subbrand != null">
+				subbrand,
+			</if>
+			<if test="customerName != null">
+				customer_name,
+			</if>
+			<if test="post != null">
+				post,
+			</if>
+			<if test="visitTime != null">
+				visit_time,
+			</if>
+			<if test="visitContent != null">
+				visit_content,
+			</if>
+			<if test="classification != null">
+				classification,
+			</if>
+			<if test="mediatype != null">
+				mediatype,
+			</if>
+			<if test="specificPosition != null">
+				specific_position,
+			</if>
+			<if test="budget != null">
+				budget,
+			</if>
+			<if test="expectedReleaseDate != null">
+				expected_release_date,
+			</if>
+			<if test="remarks != null">
+				remarks,
+			</if>
+			<if test="nextWeekPlan != null">
+				next_week_plan,
+			</if>
+			<if test="groupid != null">
+				groupid,
+			</if>
+			<if test="speaker != null">
+				speaker,
+			</if>
+			<if test="submissionTime != null">
+				submission_time,
+			</if>
+			<if test="industry != null">
+				industry,
+			</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="fullCustomerName != null">
+				#{fullCustomerName,jdbcType=VARCHAR},
+			</if>
+			<if test="mainBrand != null">
+				#{mainBrand,jdbcType=VARCHAR},
+			</if>
+			<if test="subbrand != null">
+				#{subbrand,jdbcType=VARCHAR},
+			</if>
+			<if test="customerName != null">
+				#{customerName,jdbcType=VARCHAR},
+			</if>
+			<if test="post != null">
+				#{post,jdbcType=VARCHAR},
+			</if>
+			<if test="visitTime != null">
+				#{visitTime,jdbcType=VARCHAR},
+			</if>
+			<if test="visitContent != null">
+				#{visitContent,jdbcType=VARCHAR},
+			</if>
+			<if test="classification != null">
+				#{classification,jdbcType=VARCHAR},
+			</if>
+			<if test="mediatype != null">
+				#{mediatype,jdbcType=VARCHAR},
+			</if>
+			<if test="specificPosition != null">
+				#{specificPosition,jdbcType=VARCHAR},
+			</if>
+			<if test="budget != null">
+				#{budget,jdbcType=VARCHAR},
+			</if>
+			<if test="expectedReleaseDate != null">
+				#{expectedReleaseDate,jdbcType=VARCHAR},
+			</if>
+			<if test="remarks != null">
+				#{remarks,jdbcType=VARCHAR},
+			</if>
+			<if test="nextWeekPlan != null">
+				#{nextWeekPlan,jdbcType=VARCHAR},
+			</if>
+			<if test="groupid != null">
+				#{groupid,jdbcType=INTEGER},
+			</if>
+			<if test="speaker != null">
+				#{speaker,jdbcType=VARCHAR},
+			</if>
+			<if test="submissionTime != null">
+				#{submissionTime,jdbcType=TIMESTAMP},
+			</if>
+			<if test="industry != null">
+				#{industry,jdbcType=VARCHAR},
+			</if>
+		</trim>
+	</insert>
+	<update id="updateByPrimaryKeySelective"
+		parameterType="com.yiya.bean.Weekly">
+		update weekly
+		<set>
+			<if test="fullCustomerName != null">
+				full_customer_name =
+				#{fullCustomerName,jdbcType=VARCHAR},
+			</if>
+			<if test="mainBrand != null">
+				main_brand = #{mainBrand,jdbcType=VARCHAR},
+			</if>
+			<if test="subbrand != null">
+				subbrand = #{subbrand,jdbcType=VARCHAR},
+			</if>
+			<if test="customerName != null">
+				customer_name = #{customerName,jdbcType=VARCHAR},
+			</if>
+			<if test="post != null">
+				post = #{post,jdbcType=VARCHAR},
+			</if>
+			<if test="visitTime != null">
+				visit_time = #{visitTime,jdbcType=VARCHAR},
+			</if>
+			<if test="visitContent != null">
+				visit_content = #{visitContent,jdbcType=VARCHAR},
+			</if>
+			<if test="classification != null">
+				classification = #{classification,jdbcType=VARCHAR},
+			</if>
+			<if test="mediatype != null">
+				mediatype = #{mediatype,jdbcType=VARCHAR},
+			</if>
+			<if test="specificPosition != null">
+				specific_position = #{specificPosition,jdbcType=VARCHAR},
+			</if>
+			<if test="budget != null">
+				budget = #{budget,jdbcType=VARCHAR},
+			</if>
+			<if test="expectedReleaseDate != null">
+				expected_release_date =
+				#{expectedReleaseDate,jdbcType=VARCHAR},
+			</if>
+			<if test="remarks != null">
+				remarks = #{remarks,jdbcType=VARCHAR},
+			</if>
+			<if test="nextWeekPlan != null">
+				next_week_plan = #{nextWeekPlan,jdbcType=VARCHAR},
+			</if>
+			<if test="groupid != null">
+				groupid = #{groupid,jdbcType=INTEGER},
+			</if>
+			<if test="speaker != null">
+				speaker = #{speaker,jdbcType=VARCHAR},
+			</if>
+			<if test="submissionTime != null">
+				submission_time = #{submissionTime,jdbcType=TIMESTAMP},
+			</if>
+			<if test="industry != null">
+				industry = #{industry,jdbcType=VARCHAR},
+			</if>
+		</set>
+		where id = #{id,jdbcType=INTEGER}
+	</update>
+	<update id="updateByPrimaryKey"
+		parameterType="com.yiya.bean.Weekly">
+		update weekly
+		set full_customer_name =
+		#{full_customer_name,jdbcType=VARCHAR},
+		main_brand =
+		#{main_brand,jdbcType=VARCHAR},
+		subbrand =
+		#{subbrand,jdbcType=VARCHAR},
+		customer_name =
+		#{customer_name,jdbcType=VARCHAR},
+		post = #{post,jdbcType=VARCHAR},
+		visit_time = #{visit_time,jdbcType=VARCHAR},
+		visit_content =
+		#{visit_content,jdbcType=VARCHAR},
+		classification =
+		#{classification,jdbcType=VARCHAR},
+		mediatype =
+		#{mediatype,jdbcType=VARCHAR},
+		specific_position =
+		#{specific_position,jdbcType=VARCHAR},
+		budget =
+		#{budget,jdbcType=VARCHAR},
+		expected_release_date =
+		#{expected_release_date,jdbcType=VARCHAR},
+		remarks =
+		#{remarks,jdbcType=VARCHAR},
+		next_week_plan =
+		#{next_week_plan,jdbcType=VARCHAR},
+		groupid =
+		#{groupid,jdbcType=INTEGER},
+		speaker = #{speaker,jdbcType=VARCHAR},
+		submission_time = #{submissionTime,jdbcType=TIMESTAMP},
+		industry =
+		#{industry,jdbcType=VARCHAR}
+		where id =
+		#{id,jdbcType=INTEGER}
+	</update>
+
+	<!-- 删除记录 -->
+	<delete id="delete" parameterType="Object">
+		delete from weekly where id =
+		#{id}
+	</delete>
+
+</mapper>
